@@ -1,0 +1,738 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>화장실 불편 접수</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --border: #e0e0e0;
+    --border-line: #d4d4d4;
+    --fg: #1a1a1a;
+    --fg-2: #555555;
+    --fg-3: #999999;
+    --accent: #E8591A;        /* Arena 오렌지 */
+    --accent-light: #fff3ee;
+    --danger: #d32f2f;
+    --danger-light: #fff5f5;
+    --warn: #f57c00;
+    --warn-light: #fff8f0;
+    --ok: #2e7d32;
+    --ok-light: #f0faf0;
+    --btn-bg: #5a5a5a;        /* 로그인 버튼 스타일 — 진한 회색 */
+    --btn-bg-hover: #3d3d3d;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: var(--bg); }
+  body {
+    font-family: 'Pretendard', -apple-system, 'Apple SD Gothic Neo', sans-serif;
+    color: var(--fg);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── 탑바 ── */
+  .topbar {
+    position: sticky;
+    top: 0; z-index: 100;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+  }
+  .topbar-brand {
+    font-size: 20px; font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--fg);
+  }
+  .tab-nav { display: flex; gap: 0; }
+  .tab-btn {
+    border: none; background: transparent; cursor: pointer;
+    padding: 0 16px; height: 56px;
+    font-family: inherit; font-size: 14px; font-weight: 500;
+    color: var(--fg-3);
+    border-bottom: 2px solid transparent;
+    transition: color .15s, border-color .15s;
+    white-space: nowrap;
+  }
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    font-weight: 700;
+  }
+  .theme-toggle {
+    background: none; border: none; cursor: pointer;
+    font-size: 18px; padding: 4px; color: var(--fg-3);
+    border-radius: 50%; transition: background .15s;
+  }
+  .theme-toggle:hover { background: #f5f5f5; }
+
+  /* ── 페이지 컨테이너 ── */
+  .page { display: none; max-width: 560px; margin: 0 auto; padding: 32px 24px 60px; }
+  .page.active { display: block; }
+
+  /* ── 페이지 헤더 ── */
+  .page-title {
+    font-size: 26px; font-weight: 800;
+    letter-spacing: -0.5px;
+    margin: 0 0 8px;
+    color: var(--fg);
+  }
+  .page-sub {
+    font-size: 14px; color: var(--fg-3);
+    margin: 0 0 32px;
+  }
+
+  /* ── 섹션 헤더 (오렌지 레이블 스타일) ── */
+  .section-label {
+    font-size: 12px; font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+    margin: 0 0 20px;
+    text-transform: uppercase;
+  }
+
+  /* ── 필드 — 언더라인 스타일 ── */
+  .field { margin-bottom: 24px; position: relative; }
+  .field:last-child { margin-bottom: 0; }
+
+  .field-label {
+    display: block;
+    font-size: 12px; font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 8px;
+    letter-spacing: 0.03em;
+  }
+  .field-label .req { color: var(--danger); margin-left: 2px; }
+  .field-label .opt { color: var(--fg-3); font-weight: 400; font-size: 11px; margin-left: 4px; }
+
+  /* 언더라인 인풋 */
+  .input-line {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1.5px solid var(--border-line);
+    border-radius: 0;
+    padding: 10px 0;
+    font-family: inherit;
+    font-size: 16px;
+    color: var(--fg);
+    outline: none;
+    transition: border-color .2s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .input-line::placeholder { color: var(--fg-3); font-size: 15px; }
+  .input-line:focus { border-bottom-color: var(--accent); }
+
+  /* select 언더라인 — 화살표 커스텀 */
+  select.input-line {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 4px center;
+    padding-right: 24px;
+    cursor: pointer;
+  }
+
+  textarea.input-line {
+    resize: vertical;
+    min-height: 72px;
+    line-height: 1.6;
+    padding-top: 8px;
+  }
+
+  /* ── 섹션 구분선 ── */
+  .section-divider {
+    height: 1px; background: var(--border);
+    margin: 32px 0;
+  }
+
+  /* ── 긴급도 버튼 그룹 ── */
+  .sev-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .sev-opt { position: relative; }
+  .sev-opt input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+  .sev-opt label {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: 14px 8px;
+    border: 1.5px solid var(--border-line);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px; font-weight: 500; color: var(--fg-2);
+    transition: all .15s;
+    text-align: center;
+  }
+  .sev-opt label .sev-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--border-line);
+    transition: background .15s;
+  }
+  .sev-opt.low label .sev-dot { background: #ccc; }
+  .sev-opt.mid label .sev-dot { background: #ccc; }
+  .sev-opt.high label .sev-dot { background: #ccc; }
+
+  .sev-opt input:checked + label { border-color: currentColor; font-weight: 700; }
+  .sev-opt.low  input:checked + label { color: var(--ok);     background: var(--ok-light); }
+  .sev-opt.mid  input:checked + label { color: var(--warn);   background: var(--warn-light); }
+  .sev-opt.high input:checked + label { color: var(--danger); background: var(--danger-light); }
+  .sev-opt.low  input:checked + label .sev-dot { background: var(--ok); }
+  .sev-opt.mid  input:checked + label .sev-dot { background: var(--warn); }
+  .sev-opt.high input:checked + label .sev-dot { background: var(--danger); }
+
+  /* ── 사진 첨부 ── */
+  .photo-upload-area {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1.5px solid var(--border-line);
+    cursor: pointer;
+    transition: border-color .15s;
+  }
+  .photo-upload-area:hover { border-bottom-color: var(--accent); }
+  .photo-upload-area input[type="file"] { display: none; }
+  .photo-upload-icon {
+    width: 40px; height: 40px;
+    border: 1.5px solid var(--border-line);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0; color: var(--fg-3);
+    background: #fafafa;
+    transition: border-color .15s, color .15s;
+  }
+  .photo-upload-area:hover .photo-upload-icon { border-color: var(--accent); color: var(--accent); }
+  .photo-upload-text { font-size: 14px; color: var(--fg-3); }
+  .photo-upload-text strong { display: block; font-size: 15px; font-weight: 600; color: var(--fg); }
+
+  .photo-previews { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .photo-thumb {
+    position: relative; width: 76px; height: 76px;
+    border-radius: 6px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo-thumb .remove-photo {
+    position: absolute; top: 3px; right: 3px;
+    width: 18px; height: 18px;
+    background: rgba(0,0,0,.55); color: #fff;
+    border: none; border-radius: 50%; cursor: pointer;
+    font-size: 9px; display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ── 접수 버튼 ── */
+  .btn-submit {
+    display: block; width: 100%;
+    padding: 16px;
+    background: var(--btn-bg); color: #fff;
+    border: none; border-radius: 6px;
+    font-family: inherit; font-size: 16px; font-weight: 700;
+    cursor: pointer; letter-spacing: 0.03em;
+    transition: background .15s;
+    margin-top: 36px;
+  }
+  .btn-submit:hover { background: var(--btn-bg-hover); }
+  .btn-submit:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* ── 완료 토스트 ── */
+  .toast {
+    display: none;
+    background: var(--ok-light);
+    border-left: 4px solid var(--ok);
+    border-radius: 4px;
+    padding: 16px 18px;
+    margin-bottom: 24px;
+    font-size: 14px; font-weight: 600; color: var(--ok);
+    flex-direction: column; gap: 8px;
+  }
+  .toast.show { display: flex; }
+  .toast-retry {
+    font-size: 12px; background: none;
+    border: 1px solid var(--ok); border-radius: 4px;
+    padding: 4px 12px; color: var(--ok);
+    cursor: pointer; font-weight: 600; font-family: inherit;
+    align-self: flex-start;
+  }
+
+  /* ── 관리자 대시보드 ── */
+  .dash-top {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+  }
+
+  .stats-row {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1px; background: var(--border);
+    border: 1px solid var(--border); border-radius: 6px;
+    overflow: hidden; margin-bottom: 24px;
+  }
+  .stat-card {
+    background: #fff; padding: 16px 14px; text-align: center;
+  }
+  .stat-label { font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: .04em; text-transform: uppercase; margin-bottom: 4px; }
+  .stat-num { font-size: 28px; font-weight: 800; line-height: 1; color: var(--fg); font-variant-numeric: tabular-nums; }
+  .stat-sub { font-size: 11px; color: var(--fg-3); margin-top: 2px; }
+  .stat-card.danger .stat-num { color: var(--danger); }
+  .stat-card.warn   .stat-num { color: var(--warn); }
+  .stat-card.ok     .stat-num { color: var(--ok); }
+
+  /* 배너 */
+  .info-banner {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 14px 16px;
+    border-left: 3px solid var(--accent);
+    background: var(--accent-light);
+    border-radius: 0 4px 4px 0;
+    font-size: 13px; color: var(--fg-2);
+    margin-bottom: 12px;
+  }
+  .info-banner .bicon { font-size: 16px; flex-shrink: 0; }
+  .info-banner strong { color: var(--fg); }
+  .info-banner small { color: var(--fg-3); font-size: 12px; }
+
+  /* 필터 */
+  .filter-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filter-select {
+    flex: 1; min-width: 90px; padding: 8px 10px;
+    border: 1px solid var(--border); border-radius: 4px;
+    font-family: inherit; font-size: 13px; color: var(--fg);
+    background: #fff; cursor: pointer; outline: none;
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23999' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 8px center;
+    padding-right: 26px;
+  }
+  .filter-select:focus { border-color: var(--accent); }
+
+  .btn-export {
+    background: var(--btn-bg); color: #fff;
+    border: none; border-radius: 4px;
+    padding: 8px 14px; font-family: inherit; font-size: 13px; font-weight: 600;
+    cursor: pointer; white-space: nowrap; transition: background .15s;
+  }
+  .btn-export:hover { background: var(--btn-bg-hover); }
+
+  /* 접수 카드 */
+  .report-list { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .report-card {
+    background: #fff; border-top: 1px solid var(--border);
+    padding: 16px 18px;
+    border-left: 3px solid transparent;
+    transition: background .1s;
+  }
+  .report-card:first-child { border-top: none; }
+  .report-card:hover { background: #fafafa; }
+  .report-card.sev-low  { border-left-color: var(--ok); }
+  .report-card.sev-mid  { border-left-color: var(--warn); }
+  .report-card.sev-high { border-left-color: var(--danger); }
+
+  .report-top { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
+  .badge {
+    font-size: 11px; font-weight: 700; padding: 2px 7px;
+    border-radius: 3px; letter-spacing: .02em;
+  }
+  .badge-sev-low    { background: var(--ok-light);     color: var(--ok); }
+  .badge-sev-mid    { background: var(--warn-light);   color: var(--warn); }
+  .badge-sev-high   { background: var(--danger-light); color: var(--danger); }
+  .badge-status-open     { background: #fff3ee; color: var(--accent); }
+  .badge-status-progress { background: var(--warn-light); color: var(--warn); }
+  .badge-status-done     { background: var(--ok-light);   color: var(--ok); }
+  .report-id { font-size: 11px; color: var(--fg-3); margin-left: auto; font-variant-numeric: tabular-nums; }
+
+  .report-title { font-size: 15px; font-weight: 700; margin: 0 0 4px; }
+  .report-meta { font-size: 12px; color: var(--fg-3); display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .report-actions {
+    display: flex; align-items: center; gap: 8px;
+    margin-top: 12px; padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .status-select {
+    font-size: 12px; padding: 5px 8px;
+    border: 1px solid var(--border); border-radius: 4px;
+    font-family: inherit; width: auto; background: #fff;
+    appearance: none; -webkit-appearance: none; cursor: pointer;
+  }
+  .btn-sm {
+    font-size: 12px; padding: 5px 14px;
+    background: var(--btn-bg); color: #fff;
+    border: none; border-radius: 4px; cursor: pointer;
+    font-weight: 700; transition: background .15s; font-family: inherit;
+  }
+  .btn-sm:hover { background: var(--btn-bg-hover); }
+
+  .empty-state { text-align: center; padding: 48px 0; color: var(--fg-3); }
+  .empty-state .empty-icon { font-size: 32px; margin-bottom: 8px; }
+  .empty-state p { font-size: 14px; }
+
+  /* ── 반응형 ── */
+  @media (max-width: 480px) {
+    .topbar { padding: 0 16px; }
+    .page { padding: 24px 20px 60px; }
+    .page-title { font-size: 22px; }
+    .stat-num { font-size: 22px; }
+    .tab-btn { padding: 0 12px; font-size: 13px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<!-- 탑바 -->
+<header class="topbar">
+  <div class="topbar-brand">화장실 불편 접수</div>
+  <nav class="tab-nav" role="tablist">
+    <button class="tab-btn active" role="tab" onclick="switchTab('form')">접수</button>
+    <button class="tab-btn" role="tab" onclick="switchTab('admin')">관리자</button>
+  </nav>
+  <button class="theme-toggle" title="테마" style="display:none">☀️</button>
+</header>
+
+<!-- ─── 접수 폼 ─── -->
+<main id="tab-form" class="page active" role="tabpanel">
+  <h1 class="page-title">불편사항 접수</h1>
+  <p class="page-sub">금산공장 화장실 불편사항을 아래 양식으로 접수해 주세요.</p>
+
+  <div id="submit-toast" class="toast" role="alert">
+    <div>✅ 접수가 완료되었습니다. 담당자가 신속히 처리하겠습니다.</div>
+    <div style="font-weight:400;font-size:13px;color:#2e7d32;">💬 Teams 채널 알림 이메일이 열립니다. 메일 앱에서 <strong>보내기</strong>를 눌러주세요.</div>
+    <button class="toast-retry" onclick="retrySendTeams()">📨 Teams 알림 다시 보내기</button>
+  </div>
+
+  <form id="report-form" onsubmit="submitReport(event)" novalidate>
+
+    <p class="section-label">위치 정보</p>
+
+    <div class="field">
+      <label class="field-label" for="building">건물<span class="req">*</span></label>
+      <select id="building" class="input-line" required>
+        <option value="">선택하세요</option>
+        <option>본관동</option>
+        <option>1복지동</option>
+        <option>3복지동</option>
+        <option>정련복지동</option>
+        <option>1공장</option>
+        <option>2공장</option>
+        <option>3공장</option>
+        <option>4공장</option>
+        <option>기타 부속건물</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="restroom">화장실 위치 및 세부 내역<span class="req">*</span></label>
+      <textarea id="restroom" class="input-line" required placeholder="예: 2층 남자화장실 3번 칸, 입구 우측 세면대 등"></textarea>
+    </div>
+
+    <div class="section-divider"></div>
+    <p class="section-label">불편 내용</p>
+
+    <div class="field">
+      <label class="field-label" for="category">유형<span class="req">*</span></label>
+      <select id="category" class="input-line" required>
+        <option value="">선택하세요</option>
+        <option>변기 막힘/고장</option>
+        <option>물 내림 불량</option>
+        <option>세면대 고장/누수</option>
+        <option>수도꼭지 고장</option>
+        <option>환풍기/냄새</option>
+        <option>조명 불량</option>
+        <option>청결 불량</option>
+        <option>잠금장치 고장</option>
+        <option>휴지/소모품 부족</option>
+        <option>기타</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label class="field-label">긴급도<span class="req">*</span></label>
+      <div class="sev-group">
+        <div class="sev-opt low">
+          <input type="radio" name="severity" id="sev-low" value="낮음">
+          <label for="sev-low"><span class="sev-dot"></span>낮음</label>
+        </div>
+        <div class="sev-opt mid">
+          <input type="radio" name="severity" id="sev-mid" value="보통" checked>
+          <label for="sev-mid"><span class="sev-dot"></span>보통</label>
+        </div>
+        <div class="sev-opt high">
+          <input type="radio" name="severity" id="sev-high" value="긴급">
+          <label for="sev-high"><span class="sev-dot"></span>긴급</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="detail">상세 내용<span class="opt">(선택)</span></label>
+      <textarea id="detail" class="input-line" placeholder="불편 내용을 자세히 적어주시면 빠른 처리에 도움이 됩니다."></textarea>
+    </div>
+
+    <div class="field">
+      <label class="field-label">사진 첨부<span class="opt">(선택, 최대 3장)</span></label>
+      <div class="photo-upload-area" onclick="document.getElementById('photo-input').click()">
+        <div class="photo-upload-icon">📷</div>
+        <div class="photo-upload-text">
+          <strong>사진 선택</strong>
+          JPG, PNG · 최대 3장
+        </div>
+        <input type="file" id="photo-input" accept="image/*" multiple onchange="handlePhotos(event)">
+      </div>
+      <div class="photo-previews" id="photo-previews"></div>
+    </div>
+
+    <div class="section-divider"></div>
+    <p class="section-label">접수자 정보</p>
+
+    <div class="field">
+      <label class="field-label" for="reporter">이름 / 부서<span class="opt">(선택)</span></label>
+      <input type="text" id="reporter" class="input-line" placeholder="예: 홍길동 / 경영관리팀">
+    </div>
+
+    <button type="submit" class="btn-submit" id="submit-btn">접수하기</button>
+  </form>
+</main>
+
+<!-- ─── 관리자 대시보드 ─── -->
+<main id="tab-admin" class="page" role="tabpanel">
+  <div class="dash-top">
+    <div>
+      <h1 class="page-title" style="margin-bottom:0">접수 현황</h1>
+    </div>
+    <button class="btn-export" onclick="exportToSheets()">📊 CSV 내보내기</button>
+  </div>
+
+  <div class="info-banner" style="margin-bottom:8px;">
+    <span class="bicon">📋</span>
+    <div><strong>Google Sheets</strong> — CSV 내보내기 후 붙여넣기 하세요. <small>자동 연동이 필요하면 Apps Script 가이드를 요청하세요.</small></div>
+  </div>
+  <div class="info-banner" style="border-left-color:#5865f2;background:#f0f1ff;margin-bottom:24px;">
+    <span class="bicon">💬</span>
+    <div><strong>Teams 알림 연동 완료</strong> — 접수 시 화장실 채널로 이메일 알림이 발송됩니다. <small style="display:block;margin-top:2px;">7bb6b095.hankooktech.com@kr.teams.ms</small></div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card danger">
+      <div class="stat-label">긴급</div>
+      <div class="stat-num" id="cnt-high">0</div>
+      <div class="stat-sub">미처리</div>
+    </div>
+    <div class="stat-card warn">
+      <div class="stat-label">처리중</div>
+      <div class="stat-num" id="cnt-progress">0</div>
+      <div class="stat-sub">건</div>
+    </div>
+    <div class="stat-card ok">
+      <div class="stat-label">완료</div>
+      <div class="stat-num" id="cnt-done">0</div>
+      <div class="stat-sub">건</div>
+    </div>
+  </div>
+
+  <div class="filter-row">
+    <select class="filter-select" id="filter-status" onchange="renderList()">
+      <option value="">전체 상태</option>
+      <option value="접수">접수</option>
+      <option value="처리중">처리중</option>
+      <option value="완료">완료</option>
+    </select>
+    <select class="filter-select" id="filter-sev" onchange="renderList()">
+      <option value="">전체 긴급도</option>
+      <option value="긴급">긴급</option>
+      <option value="보통">보통</option>
+      <option value="낮음">낮음</option>
+    </select>
+    <select class="filter-select" id="filter-building" onchange="renderList()">
+      <option value="">전체 건물</option>
+      <option>본관동</option>
+      <option>1복지동</option>
+      <option>3복지동</option>
+      <option>정련복지동</option>
+      <option>1공장</option>
+      <option>2공장</option>
+      <option>3공장</option>
+      <option>4공장</option>
+      <option>기타 부속건물</option>
+    </select>
+  </div>
+
+  <div id="report-list" class="report-list"></div>
+</main>
+
+<script>
+  // ── 사진 첨부 ──
+  let attachedPhotos = [];
+
+  function handlePhotos(e) {
+    const files = Array.from(e.target.files);
+    const remaining = 3 - attachedPhotos.length;
+    if (remaining <= 0) { alert('사진은 최대 3장까지 첨부 가능합니다.'); e.target.value = ''; return; }
+    const toAdd = files.slice(0, remaining);
+    let loaded = 0;
+    toAdd.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        attachedPhotos.push({ name: file.name, dataUrl: ev.target.result });
+        loaded++;
+        if (loaded === toAdd.length) renderPreviews();
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value = '';
+  }
+  function renderPreviews() {
+    const c = document.getElementById('photo-previews');
+    c.innerHTML = attachedPhotos.map((p, i) => `
+      <div class="photo-thumb">
+        <img src="${p.dataUrl}" alt="${escHtml(p.name)}">
+        <button class="remove-photo" onclick="removePhoto(${i})" title="삭제">✕</button>
+      </div>`).join('');
+  }
+  function removePhoto(idx) { attachedPhotos.splice(idx, 1); renderPreviews(); }
+
+  // ── Teams 이메일 ──
+  const TEAMS_EMAIL = '7bb6b095.hankooktech.com@kr.teams.ms';
+  function buildTeamsMessage(r) {
+    const e = r.severity === '긴급' ? '🔴' : r.severity === '보통' ? '🟡' : '🟢';
+    const subject = `[화장실 불편 접수] ${e} ${r.severity} | ${r.building} | ${r.category}`;
+    const body = [
+      `📋 접수번호: ${r.id}`,
+      `🕐 접수일시: ${new Date(r.ts).toLocaleString('ko-KR')}`,
+      `🏢 건물: ${r.building}`,
+      `📍 위치: ${r.restroom}`,
+      `🔧 유형: ${r.category}`,
+      `${e} 긴급도: ${r.severity}`,
+      r.detail   ? `📝 상세내용: ${r.detail}` : '',
+      r.reporter ? `👤 접수자: ${r.reporter}` : '',
+    ].filter(Boolean).join('\n');
+    return { subject, body };
+  }
+  function sendTeamsEmail(r) {
+    const { subject, body } = buildTeamsMessage(r);
+    const a = document.createElement('a');
+    a.href = `mailto:${encodeURIComponent(TEAMS_EMAIL)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  }
+  function retrySendTeams() { if (window._lastReport) sendTeamsEmail(window._lastReport); }
+
+  // ── 스토어 ──
+  const STORAGE_KEY = 'toilet_reports_v1';
+  let reports = [];
+  function loadReports() {
+    try { const raw = localStorage.getItem(STORAGE_KEY); reports = raw ? JSON.parse(raw) : []; } catch { reports = []; }
+    if (reports.length === 0) {
+      reports = [
+        { id:'R-001', ts:new Date(Date.now()-3600000*2).toISOString(), building:'본관동', floor:'', restroom:'2층 남자화장실 3번 칸', category:'변기 막힘/고장', severity:'긴급', detail:'변기가 완전히 막혀 사용 불가 상태입니다.', reporter:'김철수 / 생산1팀', photos:[], status:'접수' },
+        { id:'R-002', ts:new Date(Date.now()-3600000*5).toISOString(), building:'1공장', floor:'', restroom:'1층 여자화장실 입구 우측', category:'조명 불량', severity:'보통', detail:'형광등이 깜빡입니다.', reporter:'', photos:[], status:'처리중' },
+        { id:'R-003', ts:new Date(Date.now()-3600000*26).toISOString(), building:'3복지동', floor:'', restroom:'3층 남자화장실 전체', category:'휴지/소모품 부족', severity:'낮음', detail:'', reporter:'이영희 / 경영관리팀', photos:[], status:'완료' },
+      ];
+      saveReports();
+    }
+  }
+  function saveReports() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(reports)); } catch {} }
+
+  // ── 탭 ──
+  function switchTab(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    document.querySelectorAll('.tab-btn').forEach((b, i) => {
+      b.classList.toggle('active', (i === 0 && name === 'form') || (i === 1 && name === 'admin'));
+    });
+    if (name === 'admin') { updateStats(); renderList(); }
+  }
+
+  // ── 폼 제출 ──
+  function submitReport(e) {
+    e.preventDefault();
+    const building  = document.getElementById('building').value;
+    const restroom  = document.getElementById('restroom').value.trim();
+    const category  = document.getElementById('category').value;
+    const severity  = document.querySelector('input[name="severity"]:checked')?.value || '보통';
+    const detail    = document.getElementById('detail').value.trim();
+    const reporter  = document.getElementById('reporter').value.trim();
+    if (!building || !restroom || !category) {
+      alert('필수 항목(*)을 모두 입력해 주세요.\n(건물, 화장실 위치, 유형은 필수입니다)');
+      return;
+    }
+    const id = 'R-' + String(reports.length + 1).padStart(3, '0');
+    const report = { id, ts: new Date().toISOString(), building, floor:'', restroom, category, severity, detail, reporter, photos: attachedPhotos.slice(), status:'접수' };
+    reports.unshift(report);
+    saveReports();
+    document.getElementById('submit-toast').classList.add('show');
+    sendTeamsEmail(report);
+    window._lastReport = report;
+    e.target.reset();
+    document.getElementById('sev-mid').checked = true;
+    attachedPhotos = []; renderPreviews();
+    setTimeout(() => document.getElementById('submit-toast').classList.remove('show'), 8000);
+  }
+
+  // ── 대시보드 ──
+  function updateStats() {
+    document.getElementById('cnt-high').textContent     = reports.filter(r => r.severity === '긴급' && r.status !== '완료').length;
+    document.getElementById('cnt-progress').textContent = reports.filter(r => r.status === '처리중').length;
+    document.getElementById('cnt-done').textContent     = reports.filter(r => r.status === '완료').length;
+  }
+  function renderList() {
+    updateStats();
+    const sF = document.getElementById('filter-status').value;
+    const vF = document.getElementById('filter-sev').value;
+    const bF = document.getElementById('filter-building').value;
+    const list = reports.filter(r => (!sF||r.status===sF) && (!vF||r.severity===vF) && (!bF||r.building===bF));
+    const c = document.getElementById('report-list');
+    if (!list.length) { c.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>접수된 내역이 없습니다.</p></div>'; return; }
+    c.innerHTML = list.map(r => {
+      const sev = r.severity === '긴급' ? 'high' : r.severity === '보통' ? 'mid' : 'low';
+      const sc  = r.status === '완료' ? 'done' : r.status === '처리중' ? 'progress' : 'open';
+      const dt  = new Date(r.ts).toLocaleString('ko-KR', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+      return `
+      <div class="report-card sev-${sev}">
+        <div class="report-top">
+          <span class="badge badge-sev-${sev}">${r.severity}</span>
+          <span class="badge badge-status-${sc}">${r.status}</span>
+          <span class="report-id">${r.id}</span>
+        </div>
+        <div class="report-title">${escHtml(r.category)}</div>
+        <div class="report-meta">
+          <span>${escHtml(r.building)} · ${escHtml(r.restroom)}</span>
+          <span>${dt}</span>
+          ${r.reporter ? `<span>${escHtml(r.reporter)}</span>` : ''}
+        </div>
+        ${r.detail ? `<div style="font-size:13px;color:#666;margin-top:6px;">${escHtml(r.detail)}</div>` : ''}
+        ${r.photos?.length ? `<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">${r.photos.map(p=>`<img src="${p.dataUrl}" style="width:56px;height:56px;object-fit:cover;border-radius:4px;border:1px solid #e0e0e0;" alt="${escHtml(p.name)}">`).join('')}</div>` : ''}
+        <div class="report-actions">
+          <select class="status-select" data-id="${r.id}">
+            <option${r.status==='접수'?' selected':''}>접수</option>
+            <option${r.status==='처리중'?' selected':''}>처리중</option>
+            <option${r.status==='완료'?' selected':''}>완료</option>
+          </select>
+          <button class="btn-sm" onclick="updateStatus('${r.id}',this)">저장</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  function updateStatus(id, btn) {
+    const r = reports.find(x => x.id === id);
+    if (r) { r.status = btn.previousElementSibling.value; saveReports(); renderList(); }
+  }
+
+  function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function exportToSheets() {
+    const headers = ['접수번호','접수일시','건물','화장실','유형','긴급도','상세내용','접수자','상태'];
+    const rows = reports.map(r => [r.id, new Date(r.ts).toLocaleString('ko-KR'), r.building, r.restroom, r.category, r.severity, r.detail, r.reporter, r.status].map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(','));
+    const blob = new Blob(['﻿'+[headers.join(','),...rows].join('\n')], {type:'text/csv;charset=utf-8;'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '화장실_불편접수_'+new Date().toISOString().slice(0,10)+'.csv';
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 300);
+  }
+
+  loadReports();
+</script>
+</body>
+</html>
